@@ -1,0 +1,30 @@
+{
+  "name": "projectmanagement",
+  "version": "1.0.0",
+  "description": "a project management application for beginners",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/omdharb-bit/ProjectManagement.git"
+  },
+  "keywords": [
+    "udemy",
+    "course",
+    "backend",
+    "API",
+    "creation"
+  ],
+  "author": "Om Dhar Badgaiyan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/omdharb-bit/ProjectManagement/issues"
+  },
+  "homepage": "https://github.com/omdharb-bit/ProjectManagement#readme",
+  "devDependencies": {
+    "prettier": "3.6.2"
+  }
+}
