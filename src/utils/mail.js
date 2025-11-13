@@ -1,5 +1,46 @@
+import { text } from "express";
 import Mailgen from "mailgen";
+import nodemailer from "nodemailer";
 
+const sendEmail = async (options) => {
+  const mailGenerator = new Mailgen({
+    theme: "default",
+    product: {
+      name: "Task Manager",
+      link: "https://taskmanagerlink.com"
+    }
+  })
+  
+  const emailTextual = mailGenerator.generatePlaintext(options.mailegenContent)
+  
+ const emailHtml= mailGenerator.generate(options.mailegenContent)
+  
+  
+const transporter=  nodemailer.createTransport({
+    host: process.env.MAILTRAP_SMTP_HOST, 
+ port:  process.env.MAILTRAP_SMTP_PORT, 
+    auth: {
+      user: process.env.MAILTRAP_SMTP_USER,
+      pass: process.env.MAILTRAP_SMTP_PASS
+    }
+    
+})
+  
+  const mail = {
+    from: "mail-taskmanager@example.com",
+    to: options.email,
+    subject: options.subject,
+    text: emailTextual,
+    html: emailHtml
+  }
+  
+  try {
+  await transporter.sendMail(mail)
+  } catch (error) {
+  console.error("Email service failed silently. Make sure that you have proovided your MAILTRAP credentials in the .env file")
+console.error ("Error:",error)
+  }
+}
 
 
 const emailVerificationMailgenContent = ( 
@@ -24,7 +65,7 @@ const emailVerificationMailgenContent = (
 }
 
 
-const forhotpasswordMailgenContent = ( 
+const forhotpasswordMailgenContent = (
   username, passwordresetUrl) => {
   return {
     body: {
@@ -45,5 +86,5 @@ const forhotpasswordMailgenContent = (
 
 export {
   emailVerificationMailgenContent,
-  forhotpasswordMailgenContent
+  forhotpasswordMailgenContent,sendEmail
 }
