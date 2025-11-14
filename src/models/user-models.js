@@ -17,7 +17,7 @@ const userSchema = new Schema(
     },
     username: {
       type: String,
-      required: true,
+      required: [true, "Username is required"],
       unique: true,
       lowercase: true,
       trim: true,
@@ -45,7 +45,7 @@ const userSchema = new Schema(
       type: String,
     },
     forgotPasswordExpiry: {
-      type: String,
+      type: Date,
     },
     emailVerificationToken: {
       type: String,
@@ -60,7 +60,8 @@ const userSchema = new Schema(
 );
 
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("Password")) return next();
+  // ✅ lowercase 'password'
+  if (!this.isModified("password")) return next();
 
   this.password = await bcrypt.hash(this.password, 10);
   next();
@@ -72,35 +73,25 @@ userSchema.methods.isPasswordCorrect = async function (password) {
 
 userSchema.methods.generateAccessToken = function () {
   return jwt.sign(
-    {
-      _id: this._id,
-      emai: this.email,
-      userrname: this.username,
-    },
+    { _id: this._id, email: this.email, username: this.username },
     process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY },
+    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "15m" },
   );
 };
 
-userSchema.method.generateRefreshToken = function () {
-  jwt.sign(
-    {
-      _id: this._id,
-    },
-    process.env.REFREH_TOKEN_SECRET,
-    { expiresIn: process.env.REFREH_TOKEN_EXPIRY },
-  );
+userSchema.methods.generateRefreshToken = function () {
+  return jwt.sign({ _id: this._id }, process.env.REFRESH_TOKEN_SECRET, {
+    expiresIn: process.env.REFRESH_TOKEN_EXPIRY || "7d",
+  });
 };
 
 userSchema.methods.generateTemporaryToken = function () {
   const unhashedToken = crypto.randomBytes(20).toString("hex");
-
   const hashedToken = crypto
     .createHash("sha256")
     .update(unhashedToken)
     .digest("hex");
-
-  const tokenExpiry = Date.now() + 20 * 60 * 1000; //20 mins
+  const tokenExpiry = Date.now() + 15 * 60 * 1000; // 15 min expiry
   return { unhashedToken, hashedToken, tokenExpiry };
 };
 

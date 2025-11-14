@@ -11,10 +11,9 @@ const sendEmail = async (options) => {
     }
   })
   
-  const emailTextual = mailGenerator.generatePlaintext(options.mailegenContent)
-  
- const emailHtml= mailGenerator.generate(options.mailegenContent)
-  
+  const emailTextual = mailGenerator.generatePlaintext(options.mailgenContent);
+  const emailHtml = mailGenerator.generate(options.mailgenContent);
+
   
 const transporter=  nodemailer.createTransport({
     host: process.env.MAILTRAP_SMTP_HOST, 
@@ -43,8 +42,7 @@ console.error ("Error:",error)
 }
 
 
-const emailVerificationMailgenContent = ( 
-  username, verificationUrl) => {
+const emailVerificationMailgenContent = (username, verificationUrl) => {
   return {
     body: {
       name: username,
@@ -62,7 +60,10 @@ const emailVerificationMailgenContent = (
         "Need help, or have questions? Just reply to this email,we'd love to help",
     },
   };
-}
+};
+
+// export { emailVerificationMailgenContent };
+
 
 
 const forhotpasswordMailgenContent = (

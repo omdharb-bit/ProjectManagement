@@ -2,8 +2,10 @@ import { User } from "../models/user-models.js";
 import { ApiResponse } from "../utils/api-response.js";
 import { ApiError } from "../utils/api-error.js";
 import { asyncHandler } from "../utils/async-handler.js";
-import { sendEmail } from "../utils/mail.js";
 
+import { sendEmail, emailVerificationMailgenContent } from "../utils/mail.js"; // ✅ Correct path
+
+// 🔹 Generate Access + Refresh Tokens
 const generateAccessAndRefreshTokens = async (userID) => {
   try {
     const user = await User.findById(userID);
@@ -12,33 +14,36 @@ const generateAccessAndRefreshTokens = async (userID) => {
 
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
+
     return { accessToken, refreshToken };
   } catch (error) {
-    throw new ApiError(
-      500,
-      "Something went wrong while generating accessToken",
-    );
+    throw new ApiError(500, "Something went wrong while generating tokens");
   }
 };
 
+// 🔹 Register a New User
 const registerUser = asyncHandler(async (req, res) => {
   const { email, username, password, role } = req.body;
 
+  // Check if user already exists
   const existedUser = await User.findOne({
     $or: [{ username }, { email }],
   });
 
   if (existedUser) {
-    throw new ApiError(409, "User with user or email already exists", []);
+    throw new ApiError(409, "User with username or email already exists");
   }
 
-  const user = User.create({
+  // Create new user
+  const user = await User.create({
     email,
     password,
     username,
+    role,
     isEmailVerified: false,
   });
 
+  // Generate verification token
   const { unhashedToken, hashedToken, tokenExpiry } =
     user.generateTemporaryToken();
 
@@ -47,34 +52,34 @@ const registerUser = asyncHandler(async (req, res) => {
 
   await user.save({ validateBeforeSave: false });
 
+  // Send verification email
   await sendEmail({
-    email: user?.email,
+    email: user.email,
     subject: "Please verify your email",
     mailgenContent: emailVerificationMailgenContent(
-      (await user).username,
+      user.username,
       `${req.protocol}://${req.get("host")}/api/v1/users/verify-email/${unhashedToken}`,
     ),
   });
 
-  const createdUSer = await user
-    .findById(user._id)
-    .select(
-      "-password -refreshtoken -emailVerificationToken - emailVerificationExpiry",
-    );
+  // Return created user (without sensitive fields)
+  const createdUser = await User.findById(user._id).select(
+    "-password -refreshToken -emailVerificationToken -emailVerificationExpiry",
+  );
 
-  if (!createdUSer) {
-    throw new ApiError(500, "Something went wrong while registering a user");
+  if (!createdUser) {
+    throw new ApiError(500, "Something went wrong while registering user");
   }
 
   return res
-    .stattus(201)
+    .status(201)
     .json(
       new ApiResponse(
         200,
-        { user: createdUSer },
-        "User regisrtered successfully and verification email has been sent on your email",
+        { user: createdUser },
+        "User registered successfully. Verification email sent.",
       ),
     );
 });
 
-export{registerUser}
+export { registerUser };

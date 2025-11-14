@@ -1,5 +1,14 @@
 import { Router } from "express";
-import { registerUser } from "../controllers/aurth-controllers.js";
+import { registerUser } from "../controllers/auth-controllers.js";
+import {
+  emailVerificationMailgenContent,
+  forhotpasswordMailgenContent,
+  sendEmail,
+} from "../utils/mail.js";
+;
+
+
+
 const router = Router();
 
 
