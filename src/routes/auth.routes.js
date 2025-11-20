@@ -1,17 +1,24 @@
 import { Router } from "express";
-import { registerUser } from "../controllers/auth-controllers.js";
+
 import {
-  emailVerificationMailgenContent,
-  forhotpasswordMailgenContent,
-  sendEmail,
-} from "../utils/mail.js";
-;
+  registerUser,
+  login,
+  logoutUser,
+  refreshAccessToken,
+} from "../controllers/auth.controller.js";
 
-
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
+// Auth Routes
+router.post("/register", registerUser);
+router.post("/login", login);
 
-router.route("/register").post(registerUser)
+// Refresh Token Route
+router.post("/refresh-token", refreshAccessToken);
+
+// Logout Route (Protected)
+router.post("/logout", verifyJWT, logoutUser);
 
 export default router;
